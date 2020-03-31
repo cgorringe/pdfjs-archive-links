@@ -1,0 +1,23 @@
+
+a.iarchive-link {
+	/* opacity: 1.0; */
+}
+
+a.iarchive-link:link {
+	color: transparent;
+  /* border: 1px dotted #800; */
+  background-color: #88C;
+}
+
+a.iarchive-link:visited {
+	color: transparent;
+	/* color: #A00; */
+  /* border: 1px dotted #A00; */
+  background-color: #88C;
+}
+
+a.iarchive-link:hover {
+  /* border: 1px solid #800; */
+  background-color: #00F;
+
+}

@@ -11814,7 +11814,7 @@ function getDefaultPreferences() {
       "disablePageLabels": false,
       "enablePrintAutoRotate": false,
       "enableWebGL": false,
-      "eventBusDispatchToDOM": false,
+      "eventBusDispatchToDOM": true,  // false
       "externalLinkTarget": 0,
       "historyUpdateUrl": false,
       "ignoreDestinationZoom": false,
