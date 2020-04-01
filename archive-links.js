@@ -4,10 +4,10 @@
 // Code copied and modified from:
 // https://github.com/bfirsh/internetarchive-pdfjs-isbn-links/
 
+// TODO: add event listeners to the "EventBus" instead of "eventBusDispatchToDOM"
 document.addEventListener(
 	"textlayerrendered", 
 	function(event) {
-    // was this the last page?
     if (event.detail.pageNumber === PDFViewerApplication.page) {
       console.log("Adding Archive links...");
       IA_findLinks();
@@ -16,11 +16,11 @@ document.addEventListener(
   true
 );
 
-function IA_addLinkFromRegexMatch(node, match, href) {
+function IA_addLinkFromRegexMatch(node, index, text, href) {
   // split Text Node in two and return 2nd node
-  const linkText = node.splitText(match.index);
+  const linkText = node.splitText(index);
   // Split at end of match, discarding tail node
-  linkText.splitText(match[0].length);   // TODO: review this
+  linkText.splitText(text.length);
 
   const link = document.createElement("a");
   link.setAttribute("href", href);
@@ -28,31 +28,65 @@ function IA_addLinkFromRegexMatch(node, match, href) {
   link.setAttribute("class", "iarchive-link");
 
   // Insert link into DOM then move the text into the link
-  // TODO: not sure here, need to test!
   linkText.parentNode.insertBefore(link, linkText);
   link.appendChild(linkText);
+
+  return link;
 }
+
+// TODO: create generic way to store a list of regex's, wrapped regex's
+//       in an array to support multiple link types, e.g. http, ISBN, etc...
 
 function IA_findLinks() {
 
-  // TODO: include ending slashes (but not periods) and need to support line wrapping.
-  let rex = /\bhttps?\:\/\/\S+\b/g;
+  // match web links, including end slashes, but not end periods.
+  let httpRegex = /\bhttps?\:\/\/\S+[^\s\.]/g;
+
+  // TODO: need to exclude matches that start with http(s), and include links with slashes but not ending in .html
+  let httpWrap = /\S+\.html/;
+  let httpPriorCount = 0;
+  let priorAnode;
 
   const treeWalker = document.createTreeWalker(document.getElementById("viewer"), NodeFilter.SHOW_TEXT);
   while (treeWalker.nextNode()) {
     let node = treeWalker.currentNode;
-    if (node.parentNode.nodeName === "SCRIPT" || node.parentNode.nodeName === "STYLE" || node.parentNode.nodeName === "A") { continue; }
-
-    //let match = rex.exec(node.nodeValue)
-    //if (!match) { continue; }
-
-    let match;
-    while ((match = rex.exec(node.nodeValue)) !== null) {
-      // TODO: need to test this loop works correctly
-      const url = match[0];
-      console.log("Found URL: ", url);
-      IA_addLinkFromRegexMatch(node, match, "https://web.archive.org/web/*/" + url);
+    if (node.parentNode.nodeName === "SCRIPT" || node.parentNode.nodeName === "STYLE" || node.parentNode.nodeName === "A") {
+      httpPriorCount -= 1;
+      continue;
     }
-    rex.lastIndex = 0;
+
+    // searching for http(s) wrapped
+    if (httpPriorCount > 0) {
+      //console.log("httpPriorCount: ", httpPriorCount);  // DEBUG
+      httpPriorCount -= 1;
+      let matchWrap = httpWrap.exec(node.nodeValue);
+      if (matchWrap !== null) {
+        let url = matchWrap[0];
+        console.log("Wrapped URL: ", url);  // DEBUG
+        if (priorAnode !== null) {
+          // append wrapped URL to prior URL
+          let priorUrl = priorAnode.getAttribute("href");
+          let fullUrl = priorUrl + url;
+          console.log("Full URL: ", fullUrl);  // DEBUG
+          IA_addLinkFromRegexMatch(node, matchWrap.index, url, fullUrl);
+          priorAnode.setAttribute("href", fullUrl);
+        }
+        httpPriorCount = 0;
+      }
+    }
+
+    // searching for http(s) matches
+    let match = httpRegex.exec(node.nodeValue);
+    while (match !== null) {
+      // TODO: need to test this loop works correctly
+      httpPriorCount = 3;
+      let url = match[0];
+      console.log("Found URL: ", url);
+      //priorAnode = IA_addLinkFromRegexMatch(node, match.index, url, "https://web.archive.org/web/*/" + url);  // wayback machine
+      priorAnode = IA_addLinkFromRegexMatch(node, match.index, url, url);  // direct link
+      match = httpRegex.exec(node.nodeValue);
+    }
+    httpRegex.lastIndex = 0;
+
   }
 }
