@@ -11814,7 +11814,7 @@ function getDefaultPreferences() {
       "disablePageLabels": false,
       "enablePrintAutoRotate": false,
       "enableWebGL": false,
-      "eventBusDispatchToDOM": true,  // false
+      "eventBusDispatchToDOM": true,  // true = current code, false = need to get here [CG]
       "externalLinkTarget": 0,
       "historyUpdateUrl": false,
       "ignoreDestinationZoom": false,

@@ -5,9 +5,10 @@
 // https://github.com/bfirsh/internetarchive-pdfjs-isbn-links/
 
 // TODO: add event listeners to the "EventBus" instead of "eventBusDispatchToDOM"
+
 document.addEventListener(
-	"textlayerrendered", 
-	function(event) {
+  "textlayerrendered",
+  function(event) {
     if (event.detail.pageNumber === PDFViewerApplication.page) {
       console.log("Adding Archive links...");
       IA_findLinks();
@@ -15,6 +16,38 @@ document.addEventListener(
   },
   true
 );
+
+/*
+// This code doesn't work yet...
+var IA_eventBus;
+document.addEventListener(
+  "webviewerloaded",
+  function(event) {
+    console.log("webviewerloaded");
+
+    // FIXME: Doesn't work, eventBus is null
+    IA_eventBus = window.PDFViewerApplication.eventBus;
+    if (IA_eventBus !== null) {
+
+      IA_eventBus.on(
+        "textlayerrendered",
+        function(event) {
+          console.log("textlayerrendered");
+          if (event.detail.pageNumber === PDFViewerApplication.page) {
+            console.log("Adding Archive links...");
+            IA_findLinks();
+          }
+        },
+        true
+      );
+
+    }
+
+  },
+  true
+);
+*/
+
 
 function IA_addLinkFromRegexMatch(node, index, text, href) {
   // split Text Node in two and return 2nd node
@@ -82,8 +115,8 @@ function IA_findLinks() {
       httpPriorCount = 3;
       let url = match[0];
       console.log("Found URL: ", url);
-      //priorAnode = IA_addLinkFromRegexMatch(node, match.index, url, "https://web.archive.org/web/*/" + url);  // wayback machine
-      priorAnode = IA_addLinkFromRegexMatch(node, match.index, url, url);  // direct link
+      priorAnode = IA_addLinkFromRegexMatch(node, match.index, url, "https://web.archive.org/web/2/" + url);  // wayback machine
+      //priorAnode = IA_addLinkFromRegexMatch(node, match.index, url, url);  // direct link
       match = httpRegex.exec(node.nodeValue);
     }
     httpRegex.lastIndex = 0;
